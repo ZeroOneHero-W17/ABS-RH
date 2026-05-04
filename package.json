@@ -1,0 +1,38 @@
+{
+  "name": "absence-rh-system",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@types/node": "^20",
+    "@types/pdfkit": "^0.17.6",
+    "@types/react": "^18",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.0.0",
+    "multer": "^1.4.5-lts.1",
+    "next": "^14.2.35",
+    "nodemailer": "^8.0.5",
+    "pdfkit": "^0.18.0",
+    "react": "^18",
+    "react-datepicker": "^4.25.0",
+    "react-dom": "^18",
+    "react-select": "^5.8.0",
+    "xlsx": "^0.18.5",
+    "typescript": "^5"
+  },
+  "devDependencies": {
+    "@types/multer": "^2.1.0",
+    "@types/nodemailer": "^8.0.0",
+    "autoprefixer": "^10.4.16",
+    "eslint": "^8",
+    "eslint-config-next": "14.0.0",
+    "postcss": "^8.4.32",
+    "tailwindcss": "^3.3.6"
+  }
+}
