@@ -4,6 +4,8 @@ import Absence from '@/models/Absence';
 import { sendEmail } from '@/lib/email';
 import { generateAbsencePDF } from '@/lib/pdf';
 
+export const dynamic = 'force-dynamic';
+
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   await dbConnect();
 

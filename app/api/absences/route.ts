@@ -1,24 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
+ 
+export const dynamic = 'force-dynamic';
+ 
 import Absence from '@/models/Absence';
 import Counter from '@/models/Counter';
 import { sendEmail } from '@/lib/email';
 import { generateAbsencePDF } from '@/lib/pdf';
-import multer from 'multer';
-import path from 'path';
-import fs from 'fs';
-
-// Configure multer for file uploads
-const upload = multer({
-  dest: 'public/uploads/',
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype === 'application/pdf' || file.mimetype.startsWith('image/')) {
-      cb(null, true);
-    } else {
-      cb(new Error('Only PDF and image files are allowed'));
-    }
-  },
-});
 
 async function getNextMatricule() {
   const counter = await Counter.findByIdAndUpdate(
@@ -42,6 +30,12 @@ export async function POST(request: NextRequest) {
     // Handle attachment - only treat as real file if size > 0
     const fileRaw = formData.get('attachment');
     const file = fileRaw instanceof File && fileRaw.size > 0 ? fileRaw : null;
+    let attachmentDataUri = undefined;
+    
+    if (file) {
+      const buffer = Buffer.from(await file.arrayBuffer());
+      attachmentDataUri = `data:${file.type};base64,${buffer.toString('base64')}`;
+    }
     
     const absence = new Absence({
       matricule,
@@ -61,22 +55,11 @@ export async function POST(request: NextRequest) {
         startTime: formData.get('startTime') || '',
         endTime: formData.get('endTime') || '',
       },
-      attachment: file ? `/uploads/${matricule}-${file.name}` : undefined,
+      attachment: attachmentDataUri,
       status: requesterType === 'chef_service' ? 'pending_dg' : 'pending_chef',
     });
 
     await absence.save();
-
-    // Save file if exists
-    if (file) {
-      const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
-      if (!fs.existsSync(uploadsDir)) {
-        fs.mkdirSync(uploadsDir, { recursive: true });
-      }
-      const filePath = path.join(uploadsDir, `${matricule}-${file.name}`);
-      const buffer = Buffer.from(await file.arrayBuffer());
-      fs.writeFileSync(filePath, buffer);
-    }
 
     // Send confirmation email with PDF recap (non-blocking)
     try {
