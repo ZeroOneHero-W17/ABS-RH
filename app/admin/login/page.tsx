@@ -6,7 +6,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 
 const SERVICES = [
-  "Informatique", "Maintenance", "Resource Humain", "Comptabilite",
+  "Informatique", "Maintenance", "Resource Humaine", "Comptabilite",
   "Production", "Transport", "Surete", "Commercial", "Achats",
   "Service Aerien", "Regulation", "Materiel de Bord (MDB)",
   "Economat", "Audit", "Supervision",
@@ -102,13 +102,12 @@ export default function AdminLogin() {
                 key={role}
                 type="button"
                 onClick={() => { setSelectedRole(role); setError(''); }}
-                className={`py-2.5 px-2 rounded-xl text-xs font-bold border-2 transition-all text-center ${
-                  selectedRole === role
+                className={`py-2.5 px-2 rounded-xl text-xs font-bold border-2 transition-all text-center ${selectedRole === role
                     ? role === 'rh' ? 'bg-blue-600 border-blue-600 text-white shadow-sm'
-                    : role === 'chef' ? 'bg-emerald-600 border-emerald-600 text-white shadow-sm'
-                    : 'bg-purple-600 border-purple-600 text-white shadow-sm'
+                      : role === 'chef' ? 'bg-emerald-600 border-emerald-600 text-white shadow-sm'
+                        : 'bg-purple-600 border-purple-600 text-white shadow-sm'
                     : 'bg-white border-slate-200 text-slate-600 hover:border-slate-400'
-                }`}
+                  }`}
               >
                 {role === 'rh' ? 'Resource Humaine' : role === 'chef' ? ' Chef Service' : ' Direction Generale'}
               </button>
@@ -161,11 +160,10 @@ export default function AdminLogin() {
           <button
             type="submit"
             disabled={loading}
-            className={`w-full text-white py-3 px-4 rounded-xl font-bold shadow-sm transition-all disabled:opacity-50 active:scale-[0.98] ${
-              selectedRole === 'rh' ? 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500'
-              : selectedRole === 'chef' ? 'bg-emerald-600 hover:bg-emerald-700 focus:ring-emerald-500'
-              : 'bg-purple-600 hover:bg-purple-700 focus:ring-purple-500'
-            } focus:ring-2 focus:ring-offset-2`}
+            className={`w-full text-white py-3 px-4 rounded-xl font-bold shadow-sm transition-all disabled:opacity-50 active:scale-[0.98] ${selectedRole === 'rh' ? 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500'
+                : selectedRole === 'chef' ? 'bg-emerald-600 hover:bg-emerald-700 focus:ring-emerald-500'
+                  : 'bg-purple-600 hover:bg-purple-700 focus:ring-purple-500'
+              } focus:ring-2 focus:ring-offset-2`}
           >
             {loading ? 'Authentification...' : `Se connecter en tant que ${roleLabels[selectedRole]}`}
           </button>

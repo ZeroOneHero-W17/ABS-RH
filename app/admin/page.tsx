@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import * as XLSX from 'xlsx';
@@ -54,6 +54,32 @@ const formatTime = (time: string | undefined) => {
   return time; // It's already in 24h format from the input
 };
 
+const playNotificationSound = () => {
+  try {
+    const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioContext) return;
+    const ctx = new AudioContext();
+    const osc = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+    
+    osc.connect(gainNode);
+    gainNode.connect(ctx.destination);
+    
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(880, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.1);
+    
+    gainNode.gain.setValueAtTime(0, ctx.currentTime);
+    gainNode.gain.linearRampToValueAtTime(0.3, ctx.currentTime + 0.05);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 1);
+    
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 1);
+  } catch (e) {
+    console.error("Audio playback failed", e);
+  }
+};
+
 export default function AdminDashboard() {
   const router = useRouter();
   const [absences, setAbsences] = useState<Absence[]>([]);
@@ -68,6 +94,8 @@ export default function AdminDashboard() {
   const [period, setPeriod] = useState<'all' | 'day' | 'month' | 'year'>('all');
   const [departments, setDepartments] = useState<string[]>([]);
   const [newDept, setNewDept] = useState('');
+  const previousActionNeeded = useRef(0);
+  const isInitialMount = useRef(true);
 
   useEffect(() => {
     checkAuth();
@@ -95,8 +123,8 @@ export default function AdminDashboard() {
     }
   };
 
-  const fetchAbsences = async () => {
-    setLoading(true);
+  const fetchAbsences = async (showLoading = true) => {
+    if (showLoading) setLoading(true);
     try {
       const res = await fetch('/api/absences');
       if (res.ok) {
@@ -106,9 +134,17 @@ export default function AdminDashboard() {
     } catch {
       console.error('Erreur chargement');
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!authenticated) return;
+    const interval = setInterval(() => {
+      fetchAbsences(false);
+    }, 30000); // 30 seconds
+    return () => clearInterval(interval);
+  }, [authenticated]);
 
   const fetchDepartments = async () => {
     try {
@@ -228,15 +264,13 @@ export default function AdminDashboard() {
         if (abs.employee.service !== userDepartment) return false;
         if (abs.status !== 'pending_chef') return false; // Only show what needs their action
       }
-      // DG: only chef requests at pending_dg stage
+      // DG: Super admin, sees pending_dg and completed ones
       if (userRole === 'dg') {
-        if (abs.requesterType !== 'chef_service') return false;
-        if (abs.status !== 'pending_dg') return false;
+        if (!['pending_dg', 'approved', 'rejected'].includes(abs.status)) return false;
       }
-      // RH: see everything at pending_rh stage + all completed ones
+      // RH: see everything from pending_rh onwards
       if (userRole === 'rh') {
-        // Show pending_rh or finalized requests
-        if (!['pending_rh', 'approved', 'rejected'].includes(abs.status)) return false;
+        if (!['pending_rh', 'pending_dg', 'approved', 'rejected'].includes(abs.status)) return false;
       }
 
       // Search filter
@@ -257,6 +291,19 @@ export default function AdminDashboard() {
     approved: filteredAbsences.filter(a => a.status === 'approved').length,
     rejected: filteredAbsences.filter(a => a.status === 'rejected').length,
   }), [filteredAbsences, absences]);
+
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      previousActionNeeded.current = stats.actionNeeded;
+      return;
+    }
+
+    if (stats.actionNeeded > previousActionNeeded.current) {
+      playNotificationSound();
+    }
+    previousActionNeeded.current = stats.actionNeeded;
+  }, [stats.actionNeeded]);
 
   // Helper to check if an absence falls in the selected period (based on createdAt or startDate)
   const isInPeriod = (abs: Absence, p: string) => {
@@ -351,6 +398,19 @@ export default function AdminDashboard() {
               <span className={`hidden sm:inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${roleBadgeColor}`}>
                 {roleLabel}
               </span>
+              
+              {/* Notification Bell */}
+              <div className="relative flex items-center justify-center cursor-pointer p-2 rounded-full hover:bg-slate-100 transition-colors">
+                <svg className="w-6 h-6 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+                {stats.actionNeeded > 0 && (
+                  <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 ring-2 ring-white">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                  </span>
+                )}
+              </div>
             </div>
             <button
               onClick={handleLogout}

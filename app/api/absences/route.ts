@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
         endTime: formData.get('endTime') || '',
       },
       attachment: attachmentDataUri,
-      status: requesterType === 'chef_service' ? 'pending_dg' : 'pending_chef',
+      status: requesterType === 'chef_service' ? 'pending_rh' : 'pending_chef',
     });
 
     await absence.save();

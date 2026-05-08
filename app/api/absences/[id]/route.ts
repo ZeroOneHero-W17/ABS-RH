@@ -32,6 +32,17 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       } else {
         newStatus = 'rejected';
       }
+    } else if (role === 'rh') {
+      absence.rhOpinion = {
+        comment: actionComment,
+        date: now
+      };
+      absence.adminResponse = actionComment; // Sync for summary
+      if (actionStatus === 'approved') {
+        newStatus = 'pending_dg';
+      } else {
+        newStatus = 'rejected';
+      }
     } else if (role === 'dg') {
       absence.dgApproval = {
         status: actionStatus,
@@ -39,17 +50,10 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
         date: now
       };
       if (actionStatus === 'approved') {
-        newStatus = 'pending_rh';
+        newStatus = 'approved';
       } else {
         newStatus = 'rejected';
       }
-    } else if (role === 'rh') {
-      absence.rhOpinion = {
-        comment: actionComment,
-        date: now
-      };
-      absence.adminResponse = actionComment; // Sync for summary
-      newStatus = actionStatus; // 'approved' or 'rejected'
     }
 
     absence.status = newStatus;
