@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import ServiceWorkerRegister from '@/components/ServiceWorkerRegister'
+import { ThemeProvider } from '@/components/ThemeProvider'
 
 export const metadata: Metadata = {
   title: 'Système de Demande d\'Absence RH',
@@ -13,7 +14,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="fr">
+    <html lang="fr" suppressHydrationWarning>
       <head>
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#1e3a8a" />
@@ -23,8 +24,16 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
       </head>
       <body className="antialiased font-sans">
-        {children}
-        <ServiceWorkerRegister />
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+          themes={['light', 'dark', 'system']}
+        >
+          {children}
+          <ServiceWorkerRegister />
+        </ThemeProvider>
       </body>
     </html>
   )

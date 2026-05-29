@@ -2,8 +2,10 @@
 
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 import * as XLSX from 'xlsx';
+import { motion } from 'framer-motion';
+import { ThemeToggle } from '@/components/ThemeToggle';
+import { CompanyLogo } from '@/components/CompanyLogo';
 
 interface Approval {
   status: 'approved' | 'rejected' | null;
@@ -36,6 +38,7 @@ interface Absence {
   rhOpinion: { comment: string; date: string };
   adminResponse: string;
   createdAt: string;
+  attachment?: string;
 }
 
 const formatDate = (date: string | Date | undefined) => {
@@ -226,6 +229,24 @@ export default function AdminDashboard() {
     }
   };
 
+  const handlePurge = async () => {
+    if (!confirm("Êtes-vous sûr de vouloir supprimer définitivement TOUTES les demandes terminées (approuvées ou refusées) ? Cette action est irréversible et sert à dépolluer le système.")) return;
+    try {
+      const res = await fetch('/api/absences/purge', { method: 'DELETE' });
+      if (res.ok) {
+        const data = await res.json();
+        alert(`${data.deletedCount} demande(s) supprimée(s) avec succès.`);
+        await fetchAbsences();
+        setSelectedAbsence(null);
+      } else {
+        console.error('Erreur purge', await res.text());
+        alert('Erreur lors de la purge');
+      }
+    } catch (err) {
+      console.error('Erreur purge', err);
+    }
+  };
+
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
     router.push('/admin/login');
@@ -381,20 +402,15 @@ export default function AdminDashboard() {
   if (!authenticated) return null;
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans pb-10">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 font-sans pb-10 transition-colors duration-300">
       {/* Navbar */}
-      <nav className="bg-white border-b border-slate-200 sticky top-0 z-10 w-full">
+      <nav className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-10 w-full transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             <div className="flex items-center gap-4">
-              <Image
-                src="https://abs-rh.lovable.app/assets/logo-doualair-BfWfygvc.png"
-                alt="Logo"
-                width={200}
-                height={70}
-                className="object-contain"
-              />
-              <span className="hidden sm:block text-slate-300">|</span>
+              <CompanyLogo size="sm" />
+              <span className="hidden sm:block text-slate-300 dark:text-slate-600">|</span>
+              <ThemeToggle />
               <span className={`hidden sm:inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${roleBadgeColor}`}>
                 {roleLabel}
               </span>
@@ -422,8 +438,12 @@ export default function AdminDashboard() {
         </div>
       </nav>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
-        <h1 className="text-2xl font-bold text-slate-900 mb-6">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8"
+      >
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-6 transition-colors duration-300">
           Tableau de bord
           {userRole === 'chef' && userDepartment && (
             <span className="ml-2 text-emerald-600">— Département {userDepartment}</span>
@@ -432,22 +452,22 @@ export default function AdminDashboard() {
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+          <motion.div whileHover={{ y: -5 }} className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5 transition-colors duration-300">
             <p className="text-xs font-semibold text-orange-500 uppercase mb-1">Action requise</p>
-            <p className="text-3xl font-bold text-slate-900">{stats.actionNeeded}</p>
-          </div>
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+            <p className="text-3xl font-bold text-slate-900 dark:text-white transition-colors duration-300">{stats.actionNeeded}</p>
+          </motion.div>
+          <motion.div whileHover={{ y: -5 }} className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5 transition-colors duration-300">
             <p className="text-xs font-semibold text-slate-500 uppercase mb-1">Total visible</p>
-            <p className="text-3xl font-bold text-slate-900">{stats.total}</p>
-          </div>
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+            <p className="text-3xl font-bold text-slate-900 dark:text-white transition-colors duration-300">{stats.total}</p>
+          </motion.div>
+          <motion.div whileHover={{ y: -5 }} className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5 transition-colors duration-300">
             <p className="text-xs font-semibold text-emerald-600 uppercase mb-1">Approuvées</p>
-            <p className="text-3xl font-bold text-slate-900">{stats.approved}</p>
-          </div>
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+            <p className="text-3xl font-bold text-slate-900 dark:text-white transition-colors duration-300">{stats.approved}</p>
+          </motion.div>
+          <motion.div whileHover={{ y: -5 }} className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5 transition-colors duration-300">
             <p className="text-xs font-semibold text-red-500 uppercase mb-1">Refusées</p>
-            <p className="text-3xl font-bold text-slate-900">{stats.rejected}</p>
-          </div>
+            <p className="text-3xl font-bold text-slate-900 dark:text-white transition-colors duration-300">{stats.rejected}</p>
+          </motion.div>
         </div>
 
         {/* Period filter + quick period stats */}
@@ -460,39 +480,39 @@ export default function AdminDashboard() {
               <option value="month">Ce mois</option>
               <option value="year">Cette année</option>
             </select>
+            
+            {/* Departments management (admin) */}
+            {userRole === 'rh' && (
+              <div className="mt-4 p-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl transition-colors duration-300">
+                <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">Gérer les départements</h3>
+                <div className="flex gap-2 items-center">
+                  <input value={newDept} onChange={(e) => setNewDept(e.target.value)} placeholder="Nouveau département" className="border border-slate-200 dark:border-slate-700 bg-transparent dark:text-white rounded-lg px-3 py-2 text-sm flex-1" />
+                  <button onClick={addDepartment} className="px-3 py-2 bg-emerald-600 text-white rounded-lg text-sm">Ajouter</button>
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {departments.map(d => (
+                    <span key={d} className="inline-flex items-center gap-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 dark:text-slate-300 rounded-full px-3 py-1 text-sm transition-colors duration-300">
+                      {d}
+                      <button onClick={() => deleteDepartment(d)} className="text-red-500 hover:text-red-700 dark:hover:text-red-400 text-xs px-1">Suppr</button>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Departments management (admin) */}
-          {userRole === 'rh' && (
-            <div className="mt-4 p-4 bg-white border border-slate-200 rounded-xl">
-              <h3 className="text-sm font-semibold text-slate-700 mb-2">Gérer les départements</h3>
-              <div className="flex gap-2 items-center">
-                <input value={newDept} onChange={(e) => setNewDept(e.target.value)} placeholder="Nouveau département" className="border border-slate-200 rounded-lg px-3 py-2 text-sm flex-1" />
-                <button onClick={addDepartment} className="px-3 py-2 bg-emerald-600 text-white rounded-lg text-sm">Ajouter</button>
-              </div>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {departments.map(d => (
-                  <span key={d} className="inline-flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-full px-3 py-1 text-sm">
-                    {d}
-                    <button onClick={() => deleteDepartment(d)} className="text-red-500 hover:text-red-700 text-xs px-1">Suppr</button>
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-6 mt-4 sm:mt-0">
             <div className="text-center">
-              <p className="text-xs text-slate-500 uppercase">Absences (période)</p>
-              <p className="text-2xl font-bold text-slate-900">{periodStats.total}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 uppercase">Absences (période)</p>
+              <p className="text-2xl font-bold text-slate-900 dark:text-white">{periodStats.total}</p>
             </div>
             <div className="text-center">
               <p className="text-xs text-emerald-500 uppercase">Approuvées</p>
-              <p className="text-lg font-semibold text-emerald-700">{periodStats.approved}</p>
+              <p className="text-lg font-semibold text-emerald-700 dark:text-emerald-400">{periodStats.approved}</p>
             </div>
             <div className="text-center">
               <p className="text-xs text-red-500 uppercase">Refusées</p>
-              <p className="text-lg font-semibold text-red-700">{periodStats.rejected}</p>
+              <p className="text-lg font-semibold text-red-700 dark:text-red-400">{periodStats.rejected}</p>
             </div>
 
             {(userRole === 'rh' || userRole === 'chef' || userRole === 'dg') && (
@@ -500,19 +520,29 @@ export default function AdminDashboard() {
                 Exporter Excel
               </button>
             )}
+            {(userRole === 'rh' || userRole === 'dg') && (
+              <button onClick={handlePurge} className="ml-2 px-3 py-2 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/50 border border-red-200 dark:border-red-800 rounded-lg text-sm font-medium transition-colors">
+                Purger terminées
+              </button>
+            )}
           </div>
         </div>
 
         {/* Table */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-          <div className="p-4 border-b border-slate-100 bg-slate-50/50">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden transition-colors duration-300"
+        >
+          <div className="p-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 transition-colors duration-300">
             <div className="relative w-full sm:w-80">
               <input
                 type="text"
                 placeholder="Rechercher nom, email, matricule..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                className="w-full pl-9 pr-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg text-sm dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors duration-300"
               />
               <svg className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -523,15 +553,15 @@ export default function AdminDashboard() {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-white border-b border-slate-200">
-                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Demandeur</th>
-                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Type</th>
-                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Période</th>
-                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Statut</th>
-                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right">Action</th>
+                <tr className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 transition-colors duration-300">
+                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Demandeur</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Type</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Période</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Statut</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
                 {loading ? (
                   <tr><td colSpan={5} className="text-center py-10 text-slate-400">Chargement...</td></tr>
                 ) : filteredAbsences.length === 0 ? (
@@ -549,20 +579,26 @@ export default function AdminDashboard() {
                     </td>
                   </tr>
                 ) : (
-                  filteredAbsences.map((absence) => (
-                    <tr key={absence._id} className={`bg-white hover:bg-slate-50 transition-colors ${canApprove(absence) ? 'border-l-2 border-l-orange-400' : ''}`}>
+                  filteredAbsences.map((absence, index) => (
+                    <motion.tr 
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                      key={absence._id} 
+                      className={`bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors duration-300 ${canApprove(absence) ? 'border-l-2 border-l-orange-400' : ''}`}
+                    >
                       <td className="px-6 py-4">
                         <div className="flex flex-col">
-                          <span className="text-sm font-semibold text-slate-900">{absence.employee.firstName} {absence.employee.name}</span>
-                          <span className="text-xs text-slate-500">{absence.employee.service}</span>
+                          <span className="text-sm font-semibold text-slate-900 dark:text-white transition-colors duration-300">{absence.employee.firstName} {absence.employee.name}</span>
+                          <span className="text-xs text-slate-500 dark:text-slate-400">{absence.employee.service}</span>
                           <span className="text-xs font-mono text-slate-400">#{absence.matricule}</span>
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="text-sm text-slate-700 capitalize">{absence.absence.type}</span>
+                        <span className="text-sm text-slate-700 dark:text-slate-300 capitalize transition-colors duration-300">{absence.absence.type}</span>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="text-sm text-slate-700">
+                        <div className="text-sm text-slate-700 dark:text-slate-300 transition-colors duration-300">
                           {formatDate(absence.absence.startDate)} → {formatDate(absence.absence.endDate)}
                         </div>
                         {(absence.absence.startTime || absence.absence.endTime) && (
@@ -599,14 +635,14 @@ export default function AdminDashboard() {
                           )}
                         </div>
                       </td>
-                    </tr>
+                    </motion.tr>
                   ))
                 )}
               </tbody>
             </table>
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       {/* Modal */}
       {selectedAbsence && (
@@ -652,6 +688,14 @@ export default function AdminDashboard() {
                   )}
                   {selectedAbsence.absence.reason && (
                     <p className="text-xs text-slate-500 italic mt-1">"{selectedAbsence.absence.reason}"</p>
+                  )}
+                  {selectedAbsence.attachment && (
+                    <div className="mt-3">
+                      <a href={selectedAbsence.attachment} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-xs font-semibold transition-colors">
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
+                        Voir la pièce jointe
+                      </a>
+                    </div>
                   )}
                 </div>
               </div>

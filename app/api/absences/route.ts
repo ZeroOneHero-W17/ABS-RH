@@ -7,6 +7,13 @@ import Absence from '@/models/Absence';
 import Counter from '@/models/Counter';
 import { sendEmail } from '@/lib/email';
 import { generateAbsencePDF } from '@/lib/pdf';
+import { v2 as cloudinary } from 'cloudinary';
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 async function getNextMatricule() {
   const counter = await Counter.findByIdAndUpdate(
@@ -30,11 +37,28 @@ export async function POST(request: NextRequest) {
     // Handle attachment - only treat as real file if size > 0
     const fileRaw = formData.get('attachment');
     const file = fileRaw instanceof File && fileRaw.size > 0 ? fileRaw : null;
-    let attachmentDataUri = undefined;
+    let attachmentUrl = undefined;
     
     if (file) {
+      if (file.size > 12 * 1024 * 1024) {
+        return NextResponse.json({ error: 'La pièce jointe dépasse la taille maximale autorisée (12 Mo)' }, { status: 400 });
+      }
       const buffer = Buffer.from(await file.arrayBuffer());
-      attachmentDataUri = `data:${file.type};base64,${buffer.toString('base64')}`;
+      
+      // Upload to Cloudinary via stream
+      attachmentUrl = await new Promise<string>((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+          {
+            folder: 'absences',
+            resource_type: 'auto',
+          },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result!.secure_url);
+          }
+        );
+        uploadStream.end(buffer);
+      });
     }
     
     const absence = new Absence({
@@ -55,7 +79,7 @@ export async function POST(request: NextRequest) {
         startTime: formData.get('startTime') || '',
         endTime: formData.get('endTime') || '',
       },
-      attachment: attachmentDataUri,
+      attachment: attachmentUrl,
       status: requesterType === 'chef_service' ? 'pending_rh' : 'pending_chef',
     });
 
