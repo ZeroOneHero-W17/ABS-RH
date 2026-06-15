@@ -1,3 +1,35 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/*
+ * Transition douce et raffinée pour le changement de thème Light ↔ Dark.
+ * On cible `*` (wildcard) pour s'assurer que TOUT élément du DOM
+ * bénéficie de la transition, y compris les pseudo-éléments et composants dynamiques.
+ * La durée est de 700ms avec un ease-out pour un effet naturel et « fondu ».
+ */
+*,
+*::before,
+*::after {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, box-shadow, opacity;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 700ms;
+}
+
+/* Exceptions : ne pas animer les dimensions, les transforms Framer Motion, 
+   ni les éléments qui ont besoin d'une réactivité instantanée */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="date"],
+input[type="time"],
+select,
+textarea {
+  transition-property: color, background-color, border-color, box-shadow, opacity;
+  transition-duration: 700ms;
+}
+
+/* Annuler les transitions indésirables sur les animations Framer Motion */
+[style*="transform"] {
+  transition-property: color, background-color, border-color, box-shadow, opacity;
+}
