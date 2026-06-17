@@ -116,10 +116,31 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   await dbConnect();
   try {
-    const absences = await Absence.find({}).sort({ createdAt: -1 });
+    const roleCookie = request.cookies.get('user_role');
+    const userRole = roleCookie ? roleCookie.value : null;
+    const deptCookie = request.cookies.get('user_department');
+    const userDepartment = deptCookie ? deptCookie.value : null;
+
+    let query: any = {};
+    if (userRole === 'chef') {
+      // Chef: voir seulement les demandes en attente pour son service
+      if (!userDepartment) return NextResponse.json([]);
+      query = { 'employee.service': userDepartment, status: 'pending_chef' };
+    } else if (userRole === 'rh') {
+      // RH: ne doit pas voir les demandes encore en attente du chef
+      query = { status: { $in: ['pending_rh', 'pending_dg', 'approved', 'rejected'] } };
+    } else if (userRole === 'dg') {
+      // DG: voir les demandes en attente DG et les décisions finales
+      query = { status: { $in: ['pending_dg', 'approved', 'rejected'] } };
+    } else {
+      // Pas de rôle: ne rien exposer
+      return NextResponse.json([]);
+    }
+
+    const absences = await Absence.find(query).sort({ createdAt: -1 });
     return NextResponse.json(absences);
   } catch (error) {
     return NextResponse.json({ error: 'Erreur lors de la récupération' }, { status: 500 });

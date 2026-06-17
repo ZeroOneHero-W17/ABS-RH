@@ -10,17 +10,50 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   await dbConnect();
 
   try {
-    const { actionStatus, actionComment, role } = await request.json();
+    const { actionStatus, actionComment } = await request.json();
     const absence = await Absence.findById(params.id);
 
     if (!absence) {
       return NextResponse.json({ error: 'Demande non trouvée' }, { status: 404 });
     }
 
+    // Déterminer le rôle à partir des cookies côté serveur (ne pas faire confiance au client)
+    const roleCookie = request.cookies.get('user_role');
+    const role = roleCookie ? roleCookie.value : null;
+    const deptCookie = request.cookies.get('user_department');
+    const userDepartment = deptCookie ? deptCookie.value : null;
+
+    if (!role) {
+      return NextResponse.json({ error: 'Rôle inconnu' }, { status: 403 });
+    }
+
+    // Interdire DG/RH d'agir avant l'accord du chef
+    if ((role === 'dg' || role === 'rh') && absence.status === 'pending_chef') {
+      return NextResponse.json({ error: 'Action non autorisée avant accord du chef de service' }, { status: 403 });
+    }
+
+    // Vérifier que le chef agit uniquement pour son département et sur le bon statut
+    if (role === 'chef') {
+      if (!userDepartment || absence.employee.service !== userDepartment) {
+        return NextResponse.json({ error: 'Non autorisé pour ce département' }, { status: 403 });
+      }
+      if (absence.status !== 'pending_chef') {
+        return NextResponse.json({ error: 'Action non autorisée pour ce statut' }, { status: 403 });
+      }
+    }
+
+    // Vérifier les statuts attendus pour RH / DG
+    if (role === 'rh' && absence.status !== 'pending_rh') {
+      return NextResponse.json({ error: 'Action non autorisée pour ce statut' }, { status: 403 });
+    }
+    if (role === 'dg' && absence.status !== 'pending_dg') {
+      return NextResponse.json({ error: 'Action non autorisée pour ce statut' }, { status: 403 });
+    }
+
     const now = new Date();
     let newStatus = absence.status;
 
-    // Handle role-based transitions
+    // Handle role-based transitions (server-side role)
     if (role === 'chef') {
       absence.chefApproval = {
         status: actionStatus,
@@ -54,6 +87,8 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       } else {
         newStatus = 'rejected';
       }
+    } else {
+      return NextResponse.json({ error: 'Rôle non autorisé' }, { status: 403 });
     }
 
     absence.status = newStatus;
@@ -76,12 +111,18 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
         const finalSentence = newStatus === 'approved'
           ? '<p><strong>Décision :</strong> Votre demande est approuvée — vous pouvez prendre vos congés aux dates indiquées.</p>'
           : '<p><strong>Décision :</strong> Votre demande est rejetée — vous ne pouvez pas prendre ces congés tels que demandés.</p>';
+
+        // Récupérer commentaires RH et DG depuis l'objet absence (plus fiable que actionComment)
+        const rhComment = absence.rhOpinion?.comment;
+        const dgComment = absence.dgApproval?.comment;
+
         const html = `
           <p>Bonjour ${absence.employee.firstName} ${absence.employee.name},</p>
           <p>La décision finale concernant votre demande d'absence <strong>${absence.matricule}</strong> a été rendue.</p>
           <p>Statut: <strong>${newStatus === 'approved' ? 'APPROUVÉE' : 'REJETÉE'}</strong></p>
           ${finalSentence}
-          ${actionComment ? `<p>Commentaire RH: ${actionComment}</p>` : ''}
+          ${rhComment ? `<p>Commentaire RH: ${rhComment}</p>` : ''}
+          ${dgComment ? `<p>Commentaire DG: ${dgComment}</p>` : ''}
           <p>Veuillez trouver ci-joint le document officiel récapitulatif contenant les accords hiérarchiques.</p>
           <p>Cordialement,<br/>Service RH Doualair</p>
         `;

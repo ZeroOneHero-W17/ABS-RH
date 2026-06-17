@@ -1,4 +1,6 @@
 import PDFDocument from 'pdfkit';
+import fs from 'fs';
+import path from 'path';
 
 const formatDate = (date: any) => {
   if (!date) return '';
@@ -25,6 +27,32 @@ export async function generateAbsencePDF(absence: any): Promise<Buffer> {
       doc.on('data', (chunk: any) => chunks.push(chunk));
       doc.on('end', () => resolve(Buffer.concat(chunks)));
       doc.on('error', (err: any) => reject(err));
+
+      // ── WATERMARK (logo grand, semi-transparent) ───────
+      try {
+        const logoPath = path.join(process.cwd(), 'public', 'logo-doualair.png');
+        if (fs.existsSync(logoPath)) {
+          const pageWidth = doc.page.width;
+            const pageHeight = doc.page.height;
+            const maxWidth = pageWidth * 0.85;
+            const x = (pageWidth - maxWidth) / 2;
+            const y = (pageHeight - maxWidth) / 2;
+          doc.save();
+          try {
+            // set slightly stronger opacity to make watermark clearer
+            if (typeof (doc as any).opacity === 'function') (doc as any).opacity(0.14);
+          } catch (e) {}
+          try {
+            doc.image(logoPath, x, y, { width: maxWidth });
+          } catch (e) {}
+          try {
+            if (typeof (doc as any).opacity === 'function') (doc as any).opacity(1);
+          } catch (e) {}
+          doc.restore();
+        }
+      } catch (e) {
+        // ignore watermark errors
+      }
 
       // ── HEADER ──────────────────────────────────────────
       doc.fontSize(20).font('Helvetica-Bold').fillColor('#1e3a8a')
@@ -76,27 +104,29 @@ export async function generateAbsencePDF(absence: any): Promise<Buffer> {
       doc.moveDown(0.3);
 
       const approvals = [];
-      if (absence.requesterType === 'chef_service') {
-        approvals.push({
-          role: 'Direction Generale',
-          status: absence.dgApproval?.status === 'approved' ? 'ACCORDE' : absence.dgApproval?.status === 'rejected' ? 'REJETE' : 'EN ATTENTE',
-          statusSymbol: absence.dgApproval?.status === 'approved' ? '[OK]' : absence.dgApproval?.status === 'rejected' ? '[X]' : '[--]',
-          date: absence.dgApproval?.date ? formatDate(absence.dgApproval.date) : '--'
-        });
-      } else {
-        approvals.push({
-          role: 'Chef de Service',
-          status: absence.chefApproval?.status === 'approved' ? 'ACCORDE' : absence.chefApproval?.status === 'rejected' ? 'REJETE' : 'EN ATTENTE',
-          statusSymbol: absence.chefApproval?.status === 'approved' ? '[OK]' : absence.chefApproval?.status === 'rejected' ? '[X]' : '[--]',
-          date: absence.chefApproval?.date ? formatDate(absence.chefApproval.date) : '--'
-        });
-      }
 
+      // Chef de Service
+      approvals.push({
+        role: 'Chef de Service',
+        status: absence.chefApproval?.status === 'approved' ? 'ACCORDE' : absence.chefApproval?.status === 'rejected' ? 'REJETE' : (absence.requesterType === 'chef_service' ? 'N/A' : 'EN ATTENTE'),
+        statusSymbol: absence.chefApproval?.status === 'approved' ? '[OK]' : absence.chefApproval?.status === 'rejected' ? '[X]' : '[--]',
+        date: absence.chefApproval?.date ? formatDate(absence.chefApproval.date) : '--'
+      });
+
+      // Ressources Humaines
       approvals.push({
         role: 'Ressources Humaines',
-        status: absence.status === 'approved' ? 'ACCORDE' : absence.status === 'rejected' ? 'REJETE' : 'EN ATTENTE',
+        status: absence.rhOpinion?.date ? (absence.status === 'rejected' ? 'REJETE' : (absence.status === 'approved' ? 'ACCORDE' : 'ACCORDE')) : (absence.status === 'pending_rh' ? 'EN ATTENTE' : 'EN ATTENTE'),
         statusSymbol: absence.status === 'approved' ? '[OK]' : absence.status === 'rejected' ? '[X]' : '[--]',
         date: absence.rhOpinion?.date ? formatDate(absence.rhOpinion.date) : '--'
+      });
+
+      // Direction Generale
+      approvals.push({
+        role: 'Direction Generale',
+        status: absence.dgApproval?.status === 'approved' ? 'ACCORDE' : absence.dgApproval?.status === 'rejected' ? 'REJETE' : 'EN ATTENTE',
+        statusSymbol: absence.dgApproval?.status === 'approved' ? '[OK]' : absence.dgApproval?.status === 'rejected' ? '[X]' : '[--]',
+        date: absence.dgApproval?.date ? formatDate(absence.dgApproval.date) : '--'
       });
 
       doc.fontSize(9).font('Helvetica');
@@ -128,14 +158,24 @@ export async function generateAbsencePDF(absence: any): Promise<Buffer> {
           .text(`Commentaire RH: ${absence.rhOpinion.comment}`, { align: 'center' });
       }
 
+      // Afficher aussi le commentaire du DG si present
+      if (absence.dgApproval?.comment) {
+        doc.moveDown(0.3);
+        doc.fontSize(9).font('Helvetica').fillColor('#475569')
+          .text(`Commentaire DG: ${absence.dgApproval.comment}`, { align: 'center' });
+      }
+
       doc.moveDown(2);
 
-      // ── FOOTER ───────────────────────────────────────────
-      doc.fontSize(7).fillColor('#94a3b8')
-        .text('Document genere automatiquement par le Systeme de Gestion des Absences -- DOUALAIR', {
-          align: 'center',
-          width: 500,
-        });
+      // ── FOOTER (placer en bas de page pour éviter superposition avec watermark) ───────────────────────────────────────────
+      try {
+        const footerText = 'Document genere automatiquement par le Systeme de Gestion des Absences -- DOUALAIR';
+        const footerY = doc.page.height - 50;
+        doc.fontSize(7).fillColor('#94a3b8')
+          .text(footerText, 40, footerY, { align: 'center', width: doc.page.width - 80 });
+      } catch (e) {
+        // ignore footer placement errors
+      }
 
       doc.end();
     } catch (error) {

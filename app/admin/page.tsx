@@ -62,27 +62,36 @@ const formatTime = (time: string | undefined) => {
   return time;
 };
 
-const playNotificationSound = () => {
+const playNotificationSound = async () => {
   try {
     const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
     if (!AudioContext) return;
     const ctx = new AudioContext();
+    // Resume context in case of suspended state (browser autoplay policy)
+    try { await ctx.resume(); } catch (e) {}
+
     const osc = ctx.createOscillator();
     const gainNode = ctx.createGain();
-    
+
     osc.connect(gainNode);
     gainNode.connect(ctx.destination);
-    
+
     osc.type = 'sine';
     osc.frequency.setValueAtTime(880, ctx.currentTime);
     osc.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.1);
-    
+
+    const duration = 5; // seconds
     gainNode.gain.setValueAtTime(0, ctx.currentTime);
     gainNode.gain.linearRampToValueAtTime(0.3, ctx.currentTime + 0.05);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 1);
-    
+    gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration);
+
     osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + 1);
+    osc.stop(ctx.currentTime + duration + 0.05);
+
+    // Close context after finished to free resources
+    setTimeout(() => {
+      try { ctx.close(); } catch (e) {}
+    }, (duration + 0.2) * 1000);
   } catch (e) {
     console.error("Audio playback failed", e);
   }
@@ -422,6 +431,44 @@ export default function AdminDashboard() {
           className="absolute -top-40 -right-40 w-[600px] h-[600px] rounded-full bg-gradient-to-br from-blue-300/10 via-sky-200/5 to-transparent dark:from-blue-600/5 dark:via-sky-500/2 dark:to-transparent blur-3xl"
         />
 
+        {/* Layered floating shapes for depth and motion */}
+        <motion.div
+          animate={{ x: [0, -30, 30, 0], y: [0, -20, 20, 0], rotate: [0, 360] }}
+          transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
+          className="absolute top-10 left-6 w-28 h-28 rounded-full bg-gradient-to-br from-blue-400/20 to-indigo-400/10 blur-2xl"
+        />
+
+        <motion.div
+          animate={{ scale: [0.9, 1.08, 0.9], x: [0, 20, -20, 0] }}
+          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-40 right-24 w-36 h-36 rounded-full bg-amber-300/12 dark:bg-amber-400/8 blur-2xl"
+        />
+
+        {/* Subtle moving radial overlay for color dynamics */}
+        <motion.div
+          animate={{ x: [0, -20, 20, 0], rotate: [0, 10, -10, 0] }}
+          transition={{ duration: 35, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute inset-0 pointer-events-none z-0"
+          style={{
+            background:
+              'radial-gradient(circle at 18% 28%, rgba(99,102,241,0.06), transparent 14%), radial-gradient(circle at 82% 72%, rgba(14,165,233,0.05), transparent 18%)'
+          }}
+        />
+
+        {/* Small floating particles */}
+        <motion.div
+          animate={{ y: [0, -30, 0], x: [0, 20, -20, 0], opacity: [0.9, 0.2, 0.9] }}
+          transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
+          className="absolute top-24 left-1/3 w-6 h-6 rounded-full bg-white/70 dark:bg-white/10 blur-sm"
+        />
+
+        <motion.div
+          animate={{ y: [0, -18, 12, 0], x: [0, -14, 14, 0], opacity: [0.8, 0.15, 0.8] }}
+          transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }}
+          className="absolute bottom-40 right-40 w-8 h-8 rounded-full bg-purple-400/14 blur-sm"
+        />
+
+
         {/* ✈ Avion — Service aérien */}
         <motion.div
           animate={{ x: [0, 50, -50, 0], y: [0, -20, 30, 0], rotate: [0, 4, -4, 0] }}
@@ -515,6 +562,39 @@ export default function AdminDashboard() {
           <svg viewBox="0 0 200 100" fill="none" stroke="currentColor" strokeWidth="0.3" strokeDasharray="4 4" className="w-full h-full">
             <path d="M10 80 Q 60 10 120 50 T 190 20" />
             <path d="M20 90 Q 70 30 130 55 T 195 30" />
+          </svg>
+        </motion.div>
+
+        {/* Additional dynamic favicons */}
+        <motion.div
+          animate={{ rotate: [0, 360] }}
+          transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
+          className="absolute top-12 right-12 w-20 h-20 text-blue-400/[0.08] dark:text-blue-400/[0.04] blur-[1px]"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="0.6" className="w-full h-full">
+            <circle cx="12" cy="12" r="9" />
+            <path d="M12 6v6l3 3" />
+          </svg>
+        </motion.div>
+
+        <motion.div
+          animate={{ scale: [0.92, 1.06, 0.92], y: [0, -10, 0] }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-28 left-14 w-24 h-24 text-amber-400/[0.08] dark:text-amber-300/[0.04] blur-[1px]"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="0.6" className="w-full h-full">
+            <rect x="4" y="4" width="16" height="16" rx="3" />
+            <path d="M8 12h8" />
+          </svg>
+        </motion.div>
+
+        <motion.div
+          animate={{ x: [0, -50, 50, 0], y: [0, 30, -30, 0], rotate: [0, 360, 0] }}
+          transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute bottom-16 left-16 w-28 h-28 text-purple-400/[0.06] dark:text-purple-300/[0.03] blur-[1px]"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="0.5" className="w-full h-full">
+            <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26" />
           </svg>
         </motion.div>
       </div>
