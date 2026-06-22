@@ -89,12 +89,21 @@ export async function POST(request: NextRequest) {
     try {
       const absenceData = absence.toObject();
       const pdfBuffer = await generateAbsencePDF(absenceData);
-      
+
+      const payLine = absence.aPayer ? '<p><strong>A PAYER:</strong> Oui</p>' : '<p><strong>A PAYER:</strong> Non</p>';
+      const retainLine = absence.retenir ? '<p><strong>RETENIR:</strong> Oui</p>' : '<p><strong>RETENIR:</strong> Non</p>';
+      const payNoteLine = absence.aPayer && absence.aPayerNote ? `<p><strong>Note A PAYER:</strong> ${absence.aPayerNote}</p>` : '';
+      const retainNoteLine = absence.retenir && absence.retenirNote ? `<p><strong>Note RETENIR:</strong> ${absence.retenirNote}</p>` : '';
+
       await sendEmail(
         absence.employee.email,
         'Demande d\'absence reçue',
         `<p>Bonjour ${absence.employee.firstName} ${absence.employee.name},</p>
          <p>Votre demande d'absence <strong>${matricule}</strong> a bien été reçue et est en cours de traitement par votre hiérarchie.</p>
+         ${payLine}
+         ${payNoteLine}
+         ${retainLine}
+         ${retainNoteLine}
          <p>Veuillez trouver ci-joint un récapitulatif de votre demande.</p>
          <p>Cordialement,<br/>Service RH Doualair</p>`,
         [

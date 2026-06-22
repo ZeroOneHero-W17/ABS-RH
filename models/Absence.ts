@@ -40,9 +40,24 @@ const AbsenceSchema = new mongoose.Schema({
   },
   chefApproval: ApprovalSchema,
   dgApproval: ApprovalSchema,
-  rhOpinion: {
-    comment: { type: String, default: '' },
-    date: { type: Date },
+  rhOpinion: ApprovalSchema,
+  // Indicateurs décidés par le service RH: à payer / retenir
+  aPayer: {
+    type: Boolean,
+    default: false,
+  },
+  retenir: {
+    type: Boolean,
+    default: false,
+  },
+  // Notes associées aux décisions RH (remplis seulement si la case correspondante est cochée)
+  aPayerNote: {
+    type: String,
+    default: '',
+  },
+  retenirNote: {
+    type: String,
+    default: '',
   },
   adminResponse: String,
   createdAt: {

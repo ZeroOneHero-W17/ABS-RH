@@ -41,8 +41,12 @@ interface Absence {
   status: 'pending_chef' | 'pending_dg' | 'pending_rh' | 'approved' | 'rejected';
   chefApproval: Approval;
   dgApproval: Approval;
-  rhOpinion: { comment: string; date: string };
+  rhOpinion: Approval;
   adminResponse: string;
+  aPayer?: boolean;
+  retenir?: boolean;
+  aPayerNote?: string;
+  retenirNote?: string;
   createdAt: string;
   attachment?: string;
 }
@@ -103,6 +107,10 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [selectedAbsence, setSelectedAbsence] = useState<Absence | null>(null);
   const [response, setResponse] = useState('');
+  const [rhAPayer, setRhAPayer] = useState(false);
+  const [rhRetenir, setRhRetenir] = useState(false);
+  const [rhAPayerNote, setRhAPayerNote] = useState('');
+  const [rhRetenirNote, setRhRetenirNote] = useState('');
   const [authenticated, setAuthenticated] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [userDepartment, setUserDepartment] = useState<string | null>(null);
@@ -213,7 +221,14 @@ export default function AdminDashboard() {
       const res = await fetch(`/api/absences/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ actionStatus: status, actionComment: response, role: userRole }),
+        body: JSON.stringify({
+          actionStatus: status,
+          actionComment: response,
+          aPayer: rhAPayer,
+          aPayerNote: rhAPayer ? rhAPayerNote : '',
+          retenir: rhRetenir,
+          retenirNote: rhRetenir ? rhRetenirNote : ''
+        }),
       });
       if (res.ok) {
         fetchAbsences();
@@ -352,6 +367,23 @@ export default function AdminDashboard() {
     rejected: periodAbsences.filter(a => a.status === 'rejected').length,
     actionNeeded: periodAbsences.filter(a => canApprove(a)).length,
   }), [periodAbsences]);
+
+  // Initialiser les cases RH lorsque l'on ouvre une demande
+  useEffect(() => {
+    if (!selectedAbsence) {
+      setRhAPayer(false);
+      setRhRetenir(false);
+      setRhAPayerNote('');
+      setRhRetenirNote('');
+      setResponse('');
+      return;
+    }
+    setRhAPayer(!!selectedAbsence.aPayer);
+    setRhRetenir(!!selectedAbsence.retenir);
+    setRhAPayerNote(selectedAbsence.aPayerNote || '');
+    setRhRetenirNote(selectedAbsence.retenirNote || '');
+    setResponse(selectedAbsence.rhOpinion?.comment || '');
+  }, [selectedAbsence]);
 
   const exportExcel = () => {
     try {
@@ -1115,11 +1147,7 @@ export default function AdminDashboard() {
                     
                     <ApprovalRow
                       label="Opinion Ressources Humaines (RH)"
-                      approval={
-                        ['approved', 'rejected'].includes(selectedAbsence.status)
-                          ? { status: selectedAbsence.status as any, comment: selectedAbsence.rhOpinion?.comment, date: selectedAbsence.rhOpinion?.date }
-                          : null
-                      }
+                      approval={selectedAbsence.rhOpinion}
                     />
                   </div>
                 </div>
@@ -1139,6 +1167,48 @@ export default function AdminDashboard() {
                       className="w-full border border-slate-200 dark:border-slate-800 rounded-2xl p-3.5 text-sm focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all resize-none bg-slate-50/50 dark:bg-slate-950/30 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-650"
                       rows={3}
                     />
+                    {userRole === 'rh' && (
+                      <div className="mt-3">
+                        <div className="flex items-center gap-4">
+                          <label className="inline-flex items-center gap-2 text-sm">
+                            <input type="checkbox" checked={rhAPayer} onChange={(e) => setRhAPayer(e.target.checked)} className="w-4 h-4 rounded border-slate-200 dark:border-slate-800" />
+                            <span className="font-semibold">A PAYER</span>
+                          </label>
+                          <label className="inline-flex items-center gap-2 text-sm">
+                            <input type="checkbox" checked={rhRetenir} onChange={(e) => setRhRetenir(e.target.checked)} className="w-4 h-4 rounded border-slate-200 dark:border-slate-800" />
+                            <span className="font-semibold">RETENIR</span>
+                          </label>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+                          {rhAPayer && (
+                            <div>
+                              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 block">Note — A PAYER</label>
+                              <textarea
+                                placeholder="Note pour A PAYER (optionnel)"
+                                value={rhAPayerNote}
+                                onChange={(e) => setRhAPayerNote(e.target.value)}
+                                rows={2}
+                                className="w-full border border-slate-200 dark:border-slate-800 rounded-2xl p-2 text-sm bg-slate-50/50 dark:bg-slate-950/30 dark:text-white placeholder:text-slate-400"
+                              />
+                            </div>
+                          )}
+
+                          {rhRetenir && (
+                            <div>
+                              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 block">Note — RETENIR</label>
+                              <textarea
+                                placeholder="Note pour RETENIR (optionnel)"
+                                value={rhRetenirNote}
+                                onChange={(e) => setRhRetenirNote(e.target.value)}
+                                rows={2}
+                                className="w-full border border-slate-200 dark:border-slate-800 rounded-2xl p-2 text-sm bg-slate-50/50 dark:bg-slate-950/30 dark:text-white placeholder:text-slate-400"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
                     
                     <div className="grid grid-cols-2 gap-3">
                       <button

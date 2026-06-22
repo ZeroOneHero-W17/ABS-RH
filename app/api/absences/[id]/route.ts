@@ -10,7 +10,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   await dbConnect();
 
   try {
-    const { actionStatus, actionComment } = await request.json();
+    const { actionStatus, actionComment, aPayer, aPayerNote, retenir, retenirNote } = await request.json();
     const absence = await Absence.findById(params.id);
 
     if (!absence) {
@@ -66,7 +66,26 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
         newStatus = 'rejected';
       }
     } else if (role === 'rh') {
+      // Autoriser uniquement RH à définir les flags de paiement/retenue (contrôle côté serveur)
+      if (typeof aPayer !== 'undefined') {
+        absence.aPayer = !!aPayer;
+        if (absence.aPayer && typeof aPayerNote !== 'undefined') {
+          absence.aPayerNote = String(aPayerNote || '');
+        } else {
+          absence.aPayerNote = '';
+        }
+      }
+      if (typeof retenir !== 'undefined') {
+        absence.retenir = !!retenir;
+        if (absence.retenir && typeof retenirNote !== 'undefined') {
+          absence.retenirNote = String(retenirNote || '');
+        } else {
+          absence.retenirNote = '';
+        }
+      }
+
       absence.rhOpinion = {
+        status: actionStatus,
         comment: actionComment,
         date: now
       };
@@ -116,6 +135,11 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
         const rhComment = absence.rhOpinion?.comment;
         const dgComment = absence.dgApproval?.comment;
 
+        const payLine = absence.aPayer ? '<p><strong>A PAYER:</strong> Oui</p>' : '<p><strong>A PAYER:</strong> Non</p>';
+        const retainLine = absence.retenir ? '<p><strong>RETENIR:</strong> Oui</p>' : '<p><strong>RETENIR:</strong> Non</p>';
+        const payNoteLine = absence.aPayer && absence.aPayerNote ? `<p><strong>Note A PAYER:</strong> ${absence.aPayerNote}</p>` : '';
+        const retainNoteLine = absence.retenir && absence.retenirNote ? `<p><strong>Note RETENIR:</strong> ${absence.retenirNote}</p>` : '';
+
         const html = `
           <p>Bonjour ${absence.employee.firstName} ${absence.employee.name},</p>
           <p>La décision finale concernant votre demande d'absence <strong>${absence.matricule}</strong> a été rendue.</p>
@@ -123,6 +147,10 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
           ${finalSentence}
           ${rhComment ? `<p>Commentaire RH: ${rhComment}</p>` : ''}
           ${dgComment ? `<p>Commentaire DG: ${dgComment}</p>` : ''}
+          ${payLine}
+          ${payNoteLine}
+          ${retainLine}
+          ${retainNoteLine}
           <p>Veuillez trouver ci-joint le document officiel récapitulatif contenant les accords hiérarchiques.</p>
           <p>Cordialement,<br/>Service RH Doualair</p>
         `;

@@ -141,8 +141,37 @@ export async function generateAbsencePDF(absence: any): Promise<Buffer> {
 
       doc.moveDown(0.5);
 
-      // ── SECTION 4: DÉCISION ──────────────────────────────
-      doc.fontSize(11).font('Helvetica-Bold').fillColor('#1e40af').text('4. DECISION FINALE');
+      // ── SECTION 4: PAIEMENT / RETENUE (décision RH — avant la décision finale)
+      try {
+        doc.fontSize(11).font('Helvetica-Bold').fillColor('#1e40af').text('4. PAIEMENT / RETENUE');
+        doc.moveTo(40, doc.y).lineTo(555, doc.y).stroke('#e2e8f0');
+        doc.moveDown(0.4);
+        
+        const aPayerLabel = absence.aPayer ? '✓ A PAYER — OUI' : '✗ A PAYER — NON';
+        const retenirLabel = absence.retenir ? '✓ RETENIR — OUI' : '✗ RETENIR — NON';
+        const aPayerColor = absence.aPayer ? '#16a34a' : '#64748b';
+        const retenirColor = absence.retenir ? '#dc2626' : '#64748b';
+
+        doc.fontSize(10).font('Helvetica-Bold').fillColor(aPayerColor).text(aPayerLabel);
+        if (absence.aPayer && absence.aPayerNote) {
+          doc.moveDown(0.1);
+          doc.fontSize(9).font('Helvetica').fillColor('#475569').text(`  → Note: ${absence.aPayerNote}`);
+        }
+
+        doc.moveDown(0.3);
+        doc.fontSize(10).font('Helvetica-Bold').fillColor(retenirColor).text(retenirLabel);
+        if (absence.retenir && absence.retenirNote) {
+          doc.moveDown(0.1);
+          doc.fontSize(9).font('Helvetica').fillColor('#475569').text(`  → Note: ${absence.retenirNote}`);
+        }
+      } catch (e) {
+        // ignore PDF annotation errors
+      }
+
+      doc.moveDown(0.7);
+
+      // ── SECTION 5: DÉCISION FINALE
+      doc.fontSize(11).font('Helvetica-Bold').fillColor('#1e40af').text('5. DECISION FINALE');
       doc.moveTo(40, doc.y).lineTo(555, doc.y).stroke('#e2e8f0');
       doc.moveDown(0.3);
 
@@ -151,6 +180,12 @@ export async function generateAbsencePDF(absence: any): Promise<Buffer> {
 
       doc.fontSize(14).font('Helvetica-Bold').fillColor(decisionColor)
         .text(decisionLabel, { align: 'center' });
+
+      if (absence.chefApproval?.comment) {
+        doc.moveDown(0.3);
+        doc.fontSize(9).font('Helvetica').fillColor('#475569')
+          .text(`Commentaire Chef: ${absence.chefApproval.comment}`, { align: 'center' });
+      }
 
       if (absence.rhOpinion?.comment) {
         doc.moveDown(0.3);
@@ -164,8 +199,6 @@ export async function generateAbsencePDF(absence: any): Promise<Buffer> {
         doc.fontSize(9).font('Helvetica').fillColor('#475569')
           .text(`Commentaire DG: ${absence.dgApproval.comment}`, { align: 'center' });
       }
-
-      doc.moveDown(2);
 
       // ── FOOTER (placer en bas de page pour éviter superposition avec watermark) ───────────────────────────────────────────
       try {
