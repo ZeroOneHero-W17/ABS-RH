@@ -7,6 +7,7 @@ import Absence from '@/models/Absence';
 import Counter from '@/models/Counter';
 import { sendEmail } from '@/lib/email';
 import { generateAbsencePDF } from '@/lib/pdf';
+import { getChiefForService, normalizeDepartmentName } from '@/lib/departmentCatalog';
 import { v2 as cloudinary } from 'cloudinary';
 
 cloudinary.config({
@@ -61,13 +62,16 @@ export async function POST(request: NextRequest) {
       });
     }
     
+    const requestedService = normalizeDepartmentName(formData.get('service') as string | null);
+    const chief = getChiefForService(requestedService);
+
     const absence = new Absence({
       matricule,
       employee: {
         name: formData.get('name'),
         firstName: formData.get('firstName'),
         email: formData.get('email'),
-        service: formData.get('service'),
+        service: requestedService,
         function: formData.get('function'),
       },
       requesterType,
@@ -116,6 +120,25 @@ export async function POST(request: NextRequest) {
       console.log(`[SUBMISSION] Initial email with PDF sent to ${absence.employee.email}`);
     } catch (emailError: any) {
       console.error('[SUBMISSION] Email confirmation non envoyé:', emailError.message || emailError);
+    }
+
+    if (chief?.chiefEmail) {
+      try {
+        await sendEmail(
+          chief.chiefEmail,
+          `Nouvelle demande d'absence - ${absence.employee.service}`,
+          `<p>Bonjour ${chief.chiefName},</p>
+           <p>Une nouvelle demande d'absence a été soumise par ${absence.employee.firstName} ${absence.employee.name} pour le service <strong>${absence.employee.service}</strong>.</p>
+           <p>Matricule: <strong>${matricule}</strong></p>
+           <p>Type: <strong>${absence.absence.type}</strong></p>
+           <p>Période: <strong>${new Date(absence.absence.startDate).toLocaleDateString('fr-FR')} au ${new Date(absence.absence.endDate).toLocaleDateString('fr-FR')}</strong></p>
+           <p>Veuillez traiter cette demande dans les meilleurs délais.</p>
+           <p>Cordialement,<br/>Service RH Doualair</p>`
+        );
+        console.log(`[SUBMISSION] Chief notification sent to ${chief.chiefEmail}`);
+      } catch (emailError: any) {
+        console.error(`[SUBMISSION] Chief notification non envoyé à ${chief.chiefEmail}:`, emailError.message || emailError);
+      }
     }
 
     return NextResponse.json({ success: true, matricule });

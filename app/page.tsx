@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { CompanyLogo } from '@/components/CompanyLogo';
+import { getServiceOptionsForSelect } from '@/lib/departmentCatalog';
 import { 
   User, Mail, Briefcase, Calendar, Clock, FileText, 
   UploadCloud, Paperclip, Trash2, Send, CheckCircle2, 
@@ -31,14 +32,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
 
-  const services = [
-    "Informatique", "Maintenance", "Resource Humain", "Comptabilite",
-    "Production", "Transport", "Surete", "Commercial", "Achats",
-    "Service Aerien", "Regulation", "Materiel de Bord (MDB)",
-    "Economat", "Audit", "Supervision",
-    "Qualite Hygienne et surete Environmental (QHSE)",
-    "Remote"
-  ];
+  const services = getServiceOptionsForSelect();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

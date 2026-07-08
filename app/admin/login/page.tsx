@@ -6,16 +6,10 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { CompanyLogo } from '@/components/CompanyLogo';
+import { getServiceOptionsForSelect } from '@/lib/departmentCatalog';
 import { Lock, Shield, ShieldAlert, ArrowLeft, Briefcase, UserCheck } from 'lucide-react';
 
-const SERVICES = [
-  "Informatique", "Maintenance", "Resource Humaine", "Comptabilite",
-  "Production", "Transport", "Surete", "Commercial", "Achats",
-  "Service Aerien", "Regulation", "Materiel de Bord (MDB)",
-  "Economat", "Audit", "Supervision",
-  "Qualite Hygienne et surete Environmental (QHSE)",
-  "Remote"
-];
+const SERVICES = getServiceOptionsForSelect();
 
 const containerVariants = {
   hidden: { opacity: 0, y: 20 },
