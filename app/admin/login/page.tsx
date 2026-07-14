@@ -197,7 +197,7 @@ export default function AdminLogin() {
       >
         <Link 
           href="/" 
-          className="text-sm font-semibold text-slate-500 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400 px-3.5 py-1.5 rounded-lg hover:bg-slate-250/50 dark:hover:bg-slate-800/50 transition-all flex items-center gap-1.5 border border-slate-200/60 dark:border-slate-800"
+          className="text-sm font-semibold text-slate-500 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400 px-3.5 py-1.5 rounded-lg hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-all flex items-center gap-1.5 border border-slate-200/60 dark:border-slate-800"
         >
           <ArrowLeft className="w-4 h-4" />
           Retour à l'accueil

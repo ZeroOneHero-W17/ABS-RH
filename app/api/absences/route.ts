@@ -150,7 +150,13 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
-  await dbConnect();
+  try {
+    await dbConnect();
+  } catch (err) {
+    console.error('DB connection failed in /api/absences GET:', err);
+    return NextResponse.json({ error: 'Database connection failed' }, { status: 500 });
+  }
+
   try {
     const roleCookie = request.cookies.get('user_role');
     const userRole = roleCookie ? roleCookie.value : null;
@@ -176,6 +182,7 @@ export async function GET(request: NextRequest) {
     const absences = await Absence.find(query).sort({ createdAt: -1 });
     return NextResponse.json(absences);
   } catch (error) {
+    console.error('Error in /api/absences GET:', error);
     return NextResponse.json({ error: 'Erreur lors de la récupération' }, { status: 500 });
   }
 }

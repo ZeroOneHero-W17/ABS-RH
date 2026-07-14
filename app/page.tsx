@@ -152,7 +152,7 @@ export default function Home() {
         <motion.div
           animate={{ x: [0, 40, -40, 0], y: [0, -30, 20, 0], rotate: [0, 3, -3, 0] }}
           transition={{ duration: 35, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-16 right-8 w-[22rem] h-[22rem] text-blue-500/[0.06] dark:text-blue-400/[0.03] blur-[2px]"
+          className="absolute top-16 right-8 w-[22rem] h-[22rem] text-blue-500/[0.09] dark:text-blue-400/[0.05] drop-shadow-[0_0_25px_rgba(59,130,246,0.15)] filter blur-[0.5px] transition-all duration-500 hover:scale-105 hover:opacity-80"
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="0.5" className="w-full h-full">
             <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L14 19v-5.5l8 2.5z"/>
@@ -163,7 +163,7 @@ export default function Home() {
         <motion.div
           animate={{ y: [0, 12, -12, 0], rotate: [0, 2, -2, 0] }}
           transition={{ duration: 28, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute bottom-36 right-16 w-[16rem] h-[16rem] text-cyan-500/[0.05] dark:text-cyan-400/[0.025] blur-[2px]"
+          className="absolute bottom-36 right-16 w-[16rem] h-[16rem] text-cyan-500/[0.09] dark:text-cyan-400/[0.05] drop-shadow-[0_0_25px_rgba(6,182,212,0.15)] filter blur-[0.5px] transition-all duration-500 hover:scale-105 hover:opacity-80"
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="0.5" className="w-full h-full">
             {/* Ancre */}
@@ -180,7 +180,7 @@ export default function Home() {
         <motion.div
           animate={{ x: [0, 20, -20, 0], y: [0, -10, 10, 0] }}
           transition={{ duration: 32, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-1/2 left-4 w-[14rem] h-[14rem] text-slate-500/[0.05] dark:text-slate-400/[0.025] blur-[2px]"
+          className="absolute top-1/2 left-4 w-[14rem] h-[14rem] text-slate-500/[0.09] dark:text-slate-400/[0.05] drop-shadow-[0_0_25px_rgba(100,116,139,0.15)] filter blur-[0.5px] transition-all duration-500 hover:scale-105 hover:opacity-80"
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="0.5" className="w-full h-full">
             {/* Bâtiment industriel */}
@@ -201,7 +201,7 @@ export default function Home() {
         <motion.div
           animate={{ y: [0, -15, 15, 0], rotate: [0, -2, 2, 0] }}
           transition={{ duration: 30, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute bottom-20 left-1/3 w-[18rem] h-[18rem] text-amber-500/[0.05] dark:text-amber-400/[0.025] blur-[2px]"
+          className="absolute bottom-20 left-1/3 w-[18rem] h-[18rem] text-amber-500/[0.09] dark:text-amber-400/[0.05] drop-shadow-[0_0_25px_rgba(245,158,11,0.15)] filter blur-[0.5px] transition-all duration-500 hover:scale-105 hover:opacity-80"
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="0.5" className="w-full h-full">
             {/* Cloche de service */}
@@ -220,7 +220,7 @@ export default function Home() {
         <motion.div
           animate={{ x: [0, -25, 25, 0], y: [0, 15, -15, 0], rotate: [0, 1, -1, 0] }}
           transition={{ duration: 38, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-1/4 left-1/2 w-[16rem] h-[16rem] text-purple-500/[0.05] dark:text-purple-400/[0.025] blur-[2px]"
+          className="absolute top-1/4 left-1/2 w-[16rem] h-[16rem] text-purple-500/[0.09] dark:text-purple-400/[0.05] drop-shadow-[0_0_25px_rgba(168,85,247,0.15)] filter blur-[0.5px] transition-all duration-500 hover:scale-105 hover:opacity-80"
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="0.5" className="w-full h-full">
             {/* Étoile VIP */}
@@ -233,9 +233,9 @@ export default function Home() {
 
         {/* Trajectoire de vol en pointillés */}
         <motion.div
-          animate={{ opacity: [0.03, 0.06, 0.03], scale: [1, 1.03, 1] }}
+          animate={{ opacity: [0.05, 0.1, 0.05], scale: [1, 1.03, 1] }}
           transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute bottom-10 left-5 w-[32rem] h-[20rem] text-blue-500/[0.04] dark:text-blue-400/[0.02] blur-[1.5px]"
+          className="absolute bottom-10 left-5 w-[32rem] h-[20rem] text-blue-500/[0.08] dark:text-blue-400/[0.04] filter blur-[0.5px]"
         >
           <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="0.3" strokeDasharray="3 3" className="w-full h-full">
             <path d="M10 85 Q 50 15 90 85" />
