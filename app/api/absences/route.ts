@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
       await sendEmail(
         absence.employee.email,
         'Demande d\'absence reçue',
-        `<p>Bonjour ${absence.employee.firstName} ${absence.employee.name},</p>
+        `<p>Bonjour <strong>${absence.employee.firstName} ${absence.employee.name}</strong>,</p>
          <p>Votre demande d'absence <strong>${matricule}</strong> a bien été reçue et est en cours de traitement par votre hiérarchie.</p>
          ${payLine}
          ${payNoteLine}
@@ -128,11 +128,12 @@ export async function POST(request: NextRequest) {
           chief.chiefEmail,
           `Nouvelle demande d'absence - ${absence.employee.service}`,
           `<p>Bonjour ${chief.chiefName},</p>
-           <p>Une nouvelle demande d'absence a été soumise par ${absence.employee.firstName} ${absence.employee.name} pour le service <strong>${absence.employee.service}</strong>.</p>
+           <p>Une nouvelle demande d'absence a été soumise par <strong>${absence.employee.firstName} ${absence.employee.name}</strong> pour le service <strong>${absence.employee.service}</strong>.</p>
            <p>Matricule: <strong>${matricule}</strong></p>
            <p>Type: <strong>${absence.absence.type}</strong></p>
            <p>Période: <strong>${new Date(absence.absence.startDate).toLocaleDateString('fr-FR')} au ${new Date(absence.absence.endDate).toLocaleDateString('fr-FR')}</strong></p>
            <p>Veuillez traiter cette demande dans les meilleurs délais.</p>
+           <p><a href="https://abs-rh.vercel.app/">Système de Demande d'Absence RH</a></p>
            <p>Cordialement,<br/>Service RH Doualair</p>`
         );
         console.log(`[SUBMISSION] Chief notification sent to ${chief.chiefEmail}`);

@@ -62,6 +62,23 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       };
       if (actionStatus === 'approved') {
         newStatus = 'pending_rh';
+
+        try {
+          await sendEmail(
+            'ressource@doualair.com',
+            `Nouvelle demande d'absence à traiter par RH - ${absence.matricule}`,
+            `<p>Bonjour Mme. Elvyre KOYOU,</p>
+             <p>La demande d'absence <strong>${absence.matricule}</strong> a été approuvée par le chef de service.</p>
+             <p>Collaborateur : <strong>${absence.employee.firstName} ${absence.employee.name}</strong></p>
+             <p>Service : <strong>${absence.employee.service}</strong></p>
+             <p>Veuillez procéder à l'examen de la demande et transmettre au DG si nécessaire.</p>
+             <p><a href="https://abs-rh.vercel.app/">Système de Demande d'Absence RH</a></p>
+             <p>Cordialement,<br/>Système RH Doualair</p>`
+          );
+          console.log(`[WORKFLOW] RH notification sent after chef approval for ${absence.matricule}`);
+        } catch (err: any) {
+          console.error('[WORKFLOW] RH notification failed:', err.message || err);
+        }
       } else {
         newStatus = 'rejected';
       }
@@ -92,6 +109,23 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       absence.adminResponse = actionComment; // Sync for summary
       if (actionStatus === 'approved') {
         newStatus = 'pending_dg';
+
+        try {
+          await sendEmail(
+            'a.nkembe@doualair.com',
+            `Nouvelle demande d'absence à traiter par la DG - ${absence.matricule}`,
+            `<p>Bonjour Monsieur le Directeur Général,</p>
+             <p>La demande d'absence <strong>${absence.matricule}</strong> a été validée par le service RH.</p>
+             <p>Collaborateur : <strong>${absence.employee.firstName} ${absence.employee.name}</strong></p>
+             <p>Service : <strong>${absence.employee.service}</strong></p>
+             <p>Veuillez, s'il vous plaît, traiter cette demande dans les meilleurs délais.</p>
+             <p><a href="https://abs-rh.vercel.app/">Système de Demande d'Absence RH</a></p>
+             <p>Cordialement,<br/>Système RH Doualair</p>`
+          );
+          console.log(`[WORKFLOW] DG notification sent after RH approval for ${absence.matricule}`);
+        } catch (err: any) {
+          console.error('[WORKFLOW] DG notification failed:', err.message || err);
+        }
       } else {
         newStatus = 'rejected';
       }

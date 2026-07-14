@@ -5,20 +5,20 @@ export interface ServiceOption {
 }
 
 export const SERVICE_OPTIONS: ServiceOption[] = [
-  { value: 'Informatique', chiefName: 'Jean Pierre MBALLA', chiefEmail: 'Chef.si@doualair.com' },
-  { value: 'Maintenance', chiefName: 'Jonas PASSIRI', chiefEmail: 'maintenance@doualair.com' },
-  { value: 'Ressources Humaines', chiefName: 'Elvyre KOYOU', chiefEmail: 'ressource@doualair.com' },
-  { value: 'Comptabilite', chiefName: 'ALIYOU NJIKAM', chiefEmail: 'dirfinance@doualair.com' },
-  { value: 'Production', chiefName: 'Roméo KOUOKAM', chiefEmail: 'production@doualair.com' },
-  { value: 'Transport', chiefName: 'SANI MAMA', chiefEmail: 'transport@doualair.com' },
-  { value: 'Surete', chiefName: 'Philippe NTAMACK', chiefEmail: 'sureted1d2@doualair.com' },
-  { value: 'Commercial', chiefName: 'Ginette BIONGLA', chiefEmail: 'commercial@doualair.com' },
-  { value: 'Achats', chiefName: 'KPOUMIE ARAMIYAHOU', chiefEmail: 'Controlegestock.doualair@gmail.com' },
-  { value: 'Service Aerien', chiefName: 'Simonne NDEDI', chiefEmail: 'aerien@doualair.com' },
-  { value: 'Qualite Hygienne et surete Environmental (QHSE)', chiefName: 'Judith NSONGA', chiefEmail: 'qualite@doualair.com' },
-  { value: 'Remote', chiefName: 'Jean Paul ZOATOM', chiefEmail: 'horsfoyer@doualair.com' },
-  { value: 'Audit', chiefName: 'NICOLE KONN', chiefEmail: 'audit.interne@doualair.com' },
-  { value: 'Restauration Publique', chiefName: 'Danielle TICKY', chiefEmail: 'services.clients@doualair.com' },
+  { value: 'Informatique', chiefName: 'M. Jean Pierre MBALLA', chiefEmail: 'Chef.si@doualair.com' },
+  { value: 'Maintenance', chiefName: 'M. Jonas PASSIRI', chiefEmail: 'maintenance@doualair.com' },
+  { value: 'Ressources Humaines', chiefName: 'Mme. Elvyre KOYOU', chiefEmail: 'ressource@doualair.com' },
+  { value: 'Comptabilite', chiefName: 'M. ALIYOU NJIKAM', chiefEmail: 'dirfinance@doualair.com' },
+  { value: 'Production', chiefName: 'M. Roméo KOUOKAM', chiefEmail: 'production@doualair.com' },
+  { value: 'Transport', chiefName: 'M. SANI MAMA', chiefEmail: 'transport@doualair.com' },
+  { value: 'Surete', chiefName: 'M. Philippe NTAMACK', chiefEmail: 'sureted1d2@doualair.com' },
+  { value: 'Commercial', chiefName: 'Mme. Ginette BIONGLA', chiefEmail: 'commercial@doualair.com' },
+  { value: 'Achats', chiefName: 'M. KPOUMIE ARAMIYAHOU', chiefEmail: 'Controlegestock.doualair@gmail.com' },
+  { value: 'Service Aerien', chiefName: 'Mme. Simonne NDEDI', chiefEmail: 'aerien@doualair.com' },
+  { value: 'Qualite Hygienne et surete Environmental (QHSE)', chiefName: 'Mme. Judith NSONGA', chiefEmail: 'qualite@doualair.com' },
+  { value: 'Remote', chiefName: 'M. Jean Paul ZOATOM', chiefEmail: 'horsfoyer@doualair.com' },
+  { value: 'Audit', chiefName: 'Mme. NICOLE KONN', chiefEmail: 'audit.interne@doualair.com' },
+  { value: 'Restauration Publique', chiefName: 'Mme. Danielle TICKY', chiefEmail: 'services.clients@doualair.com' },
 ];
 
 export const OBSOLETE_DEPARTMENT_NAMES = ['Supervision', 'Regulation', 'Economat'];
