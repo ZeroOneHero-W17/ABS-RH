@@ -67,3 +67,11 @@ Une application web pour gérer les demandes d'absence des employés avec un pan
 - Notifications push
 - Export PDF des demandes
 - Interface mobile responsive améliorée
+
+## Applications Android et Windows
+
+Les clients natifs affichent le site de production `https://abs-rh.vercel.app` et utilisent ses routes API. Ils nécessitent une connexion Internet ; la base de données et ses identifiants restent sur Vercel.
+
+Pour créer le projet Android une première fois, exécutez `npm run android:add`. Avec Android Studio, le SDK Android et Java installés, construisez l'APK de test avec `npm run android:build`. Le fichier est généré dans `android/app/build/outputs/apk/debug/app-debug.apk`.
+
+Sur Windows, construisez le client portable avec `npm run desktop:build`. Le fichier EXE est généré dans `release/`.

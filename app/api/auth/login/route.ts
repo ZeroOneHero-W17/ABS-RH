@@ -1,15 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
+import connectDB from '@/lib/db';
+import { clearLoginFailures, isLoginBlocked, recordFailedLogin } from '@/lib/loginRateLimit';
 
 export async function POST(request: NextRequest) {
   try {
-    const { password, department } = await request.json();
+    await connectDB();
+    if (await isLoginBlocked(request)) {
+      return NextResponse.json({ error: 'Trop de tentatives. Réessayez dans 15 minutes.' }, { status: 429 });
+    }
+
+    const { password, department, rememberMe } = await request.json();
     console.log('[AUTH] login attempt', { department, passwordProvided: !!password });
     let role = '';
 
     // Admin and DG quick checks
-    if (password === process.env.ADMIN_PASSWORD) {
+    if (process.env.ADMIN_PASSWORD && password === process.env.ADMIN_PASSWORD) {
       role = 'rh';
-    } else if (password === process.env.DG_PASSWORD) {
+    } else if (process.env.DG_PASSWORD && password === process.env.DG_PASSWORD) {
       role = 'dg';
     }
 
@@ -27,7 +34,7 @@ export async function POST(request: NextRequest) {
       }
 
       // fallback to global CHEF_PASSWORD
-      if (!role && password === process.env.CHEF_PASSWORD) {
+      if (!role && process.env.CHEF_PASSWORD && password === process.env.CHEF_PASSWORD) {
         role = 'chef';
       }
     }
@@ -38,20 +45,22 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Département requis pour Chef de Service' }, { status: 400 });
       }
 
+      await clearLoginFailures(request);
       const response = NextResponse.json({ success: true, role });
+      const maxAge = rememberMe === true ? 60 * 60 * 24 * 30 : 10 * 60;
 
       response.cookies.set('admin_token', 'authenticated', {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
-        maxAge: 60 * 60 * 24,
+        maxAge,
       });
 
       response.cookies.set('user_role', role, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
-        maxAge: 60 * 60 * 24,
+        maxAge,
       });
 
       // Store department for chef isolation
@@ -60,13 +69,17 @@ export async function POST(request: NextRequest) {
           httpOnly: true,
           secure: process.env.NODE_ENV === 'production',
           sameSite: 'lax',
-          maxAge: 60 * 60 * 24,
+          maxAge,
         });
       }
 
       return response;
     } else {
-      return NextResponse.json({ error: 'Mot de passe incorrect' }, { status: 401 });
+      const blocked = await recordFailedLogin(request);
+      return NextResponse.json(
+        { error: blocked ? 'Trop de tentatives. Réessayez dans 15 minutes.' : 'Mot de passe incorrect' },
+        { status: blocked ? 429 : 401 }
+      );
     }
   } catch (error) {
     console.error('[AUTH] error', error);

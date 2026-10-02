@@ -1,0 +1,7 @@
+{
+  "name": "doualair-absences-desktop",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Client Windows Doualair Absences connecté au portail Vercel",
+  "main": "main.cjs"
+}

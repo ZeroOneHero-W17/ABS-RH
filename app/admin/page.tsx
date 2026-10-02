@@ -6,6 +6,7 @@ import * as XLSX from 'xlsx';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { CompanyLogo } from '@/components/CompanyLogo';
+import AdminPieChart from '@/components/AdminPieChart';
 import { getServiceOptionsForSelect } from '@/lib/departmentCatalog';
 import { 
   Bell, FileText, CheckCircle2, XCircle, Clock, 
@@ -744,6 +745,16 @@ export default function AdminDashboard() {
                 Purger terminées
               </motion.button>
             )}
+            {userRole === 'rh' && (
+              <motion.button 
+                onClick={() => router.push('/admin/employes')}
+                whileHover={{ scale: 1.02, y: -1 }}
+                whileTap={{ scale: 0.98 }}
+                className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white shadow-md rounded-xl text-sm font-bold flex items-center gap-2 transition-all"
+              >
+                Gérer Employés
+              </motion.button>
+            )}
           </div>
         </div>
 
@@ -808,6 +819,8 @@ export default function AdminDashboard() {
             <p className="text-3xl font-extrabold text-slate-900 dark:text-white mt-1">{stats.rejected}</p>
           </motion.div>
         </div>
+
+        {userRole === 'rh' && <AdminPieChart absences={absences} />}
 
         {/* Filters and Management */}
         <div className="flex flex-col xl:flex-row gap-6 mb-8">

@@ -9,6 +9,10 @@
 # next.js
 /.next/
 /out/
+/release/
+/android/.gradle/
+/android/local.properties
+/android/app/build/
 
 # production
 /build

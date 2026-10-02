@@ -1,21 +1,22 @@
 import { NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
 
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 export async function GET() {
-  // 1. Vérifier les variables d'environnement
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  }
+
   const config = {
-    SMTP_HOST: process.env.SMTP_HOST,
-    SMTP_PORT: process.env.SMTP_PORT,
-    SMTP_USER: process.env.SMTP_USER,
-    SMTP_FROM: process.env.SMTP_FROM,
-    SMTP_PASS_EXISTS: !!process.env.SMTP_PASS,
-    SMTP_PASS_LENGTH: process.env.SMTP_PASS?.length,
-    SMTP_PASS_VALUE: process.env.SMTP_PASS, // temporaire pour debug
+    SMTP_HOST_CONFIGURED: !!process.env.SMTP_HOST,
+    SMTP_PORT_CONFIGURED: !!process.env.SMTP_PORT,
+    SMTP_USER_CONFIGURED: !!process.env.SMTP_USER,
+    SMTP_FROM_CONFIGURED: !!process.env.SMTP_FROM,
+    SMTP_PASS_CONFIGURED: !!process.env.SMTP_PASS,
   };
 
-  console.log('[DIAG] Env vars:', config);
-
-  // 2. Tenter connexion SMTP
   try {
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
@@ -28,17 +29,13 @@ export async function GET() {
     });
 
     await transporter.verify();
-    console.log('[DIAG] SMTP verify OK');
 
-    // 3. Envoyer un email de test
     const info = await transporter.sendMail({
       from: process.env.SMTP_FROM,
       to: process.env.SMTP_USER,
       subject: 'DIAGNOSTIC - Test depuis Next.js',
       html: '<h2>✅ Email envoyé depuis Next.js</h2><p>Les variables env sont correctement chargées.</p>',
     });
-
-    console.log('[DIAG] Email sent:', info.messageId);
 
     return NextResponse.json({
       success: true,
@@ -47,11 +44,10 @@ export async function GET() {
     });
 
   } catch (error: any) {
-    console.error('[DIAG] Error:', error.message);
     return NextResponse.json({
       success: false,
       config,
-      error: error.message,
+      error: error instanceof Error ? error.message : 'Erreur SMTP',
       code: error.code,
     }, { status: 500 });
   }
