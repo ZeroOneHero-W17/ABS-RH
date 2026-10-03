@@ -11,7 +11,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Trop de tentatives. Réessayez dans 15 minutes.' }, { status: 429 });
     }
 
-    const { email, password, rememberMe } = await request.json();
+    const { email: rawEmail, password, rememberMe } = await request.json();
+    const email = typeof rawEmail === 'string' ? rawEmail.trim().toLowerCase() : '';
 
     const user = await User.findOne({ email });
     if (!user) {
